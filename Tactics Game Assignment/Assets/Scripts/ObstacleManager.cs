@@ -6,6 +6,7 @@ public class ObstacleManager : MonoBehaviour
 
     public ObstacleData obstacleData;
     public GameObject obstaclePrefab;
+    public float x, y, z;
 
     void Awake()
     {
@@ -14,7 +15,16 @@ public class ObstacleManager : MonoBehaviour
 
     void Start()
     {
+        // Update obstacles and then change position and rotation
         UpdateObstacles();
+
+        // Set a new position for the ObstacleManager
+        Vector3 newPosition = new Vector3(2.5f, 1f, 7.1f);
+        transform.position = newPosition;
+
+        // Set a new rotation for the ObstacleManager
+        Quaternion newRotation = Quaternion.Euler(0f, 45f, 0f);
+        transform.rotation = newRotation;
     }
 
     public void UpdateObstacles()
@@ -32,6 +42,12 @@ public class ObstacleManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    void OnDrawGizmos()
+    {
+        // Example: Draw a wireframe cube around the ObstacleManager object
+        Gizmos.DrawWireCube(transform.position, new Vector3(x, y, z)); // Adjust the size as needed
     }
 
     void ClearObstacles()

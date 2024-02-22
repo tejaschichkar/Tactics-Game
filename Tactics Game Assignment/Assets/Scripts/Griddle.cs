@@ -11,6 +11,14 @@ public class Griddle : MonoBehaviour
     void Start()
     {
         CreateGrid();
+
+        // Set a new position for the Griddle
+        Vector3 newPosition = new Vector3(2.5f, 1f, 7.1f);
+        transform.position = newPosition;
+
+        // Set a new rotation for the Griddle
+        Quaternion newRotation = Quaternion.Euler(45f, 0f, 0f);
+        transform.rotation = newRotation;
     }
 
     void CreateGrid()
@@ -35,7 +43,6 @@ public class Griddle : MonoBehaviour
         // Example: Draw a wireframe cube around the grid object
         Gizmos.DrawWireCube(transform.position, new Vector3(gridSize.x * nodeSize, 0.1f, gridSize.y * nodeSize));
     }
-
 
     public Node NodeFromWorldPoint(Vector3 worldPosition)
     {
