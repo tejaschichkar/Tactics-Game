@@ -5,11 +5,25 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
+    public float attackRange = 1.5f;
+    public float attackCooldown = 1.5f; // Adjust the cooldown duration as needed
     private bool isMoving = false;
+    private bool isOnCooldown = false;
+    private EnemyAI enemyAI;
+
+    void Start()
+    {
+        enemyAI = FindObjectOfType<EnemyAI>();
+
+        if (enemyAI == null)
+        {
+            Debug.LogError("EnemyAI script not found");
+        }
+    }
 
     void Update()
     {
-        if (!isMoving && Input.GetMouseButtonDown(0))
+        if (!isMoving && Input.GetMouseButtonDown(0) && !isOnCooldown)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -20,23 +34,14 @@ public class PlayerMovement : MonoBehaviour
                 {
                     Vector3 targetPosition = new Vector3(hit.transform.position.x, transform.position.y, hit.transform.position.z);
 
-                    Pathfinding pathfinding = FindObjectOfType<Pathfinding>();
-                    if (pathfinding != null)
+                    if (Vector3.Distance(transform.position, enemyAI.transform.position) <= attackRange)
                     {
-                        List<Node> path = pathfinding.FindPath(transform.position, targetPosition);
-                        if (path != null)
-                        {
-                            // Move the player along the path
-                            StartCoroutine(MoveAlongPath(path));
-                        }
-                        else
-                        {
-                            Debug.LogError("Path is null");
-                        }
+                        // Perform attack on the enemy
+                        AttackEnemy();
                     }
                     else
                     {
-                        Debug.LogError("Pathfinding script not found");
+                        StartCoroutine(MoveToTarget(targetPosition));
                     }
                 }
             }
@@ -59,23 +64,37 @@ public class PlayerMovement : MonoBehaviour
 
     IEnumerator MoveToTarget(Vector3 targetPosition)
     {
-        float distanceThreshold = 0.1f;
+        isMoving = true;
 
-        while (Vector3.Distance(transform.position, targetPosition) > distanceThreshold)
+        while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
         {
-            // Check if the target tile is blocked by an obstacle
-            if (!IsTileBlocked(targetPosition))
-            {
-                transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
-            }
-            else
-            {
-                Debug.Log("Target tile is blocked by an obstacle. Unable to move.");
-                break; // Break out of the loop if the tile is blocked
-            }
-
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
             yield return null;
         }
+
+        isMoving = false;
+    }
+
+    void AttackEnemy()
+    {
+        if (enemyAI != null && enemyAI is IAI)
+        {
+            (enemyAI as IAI).TakeDamage(10); // Assuming 10 as the damage value, modify as needed
+
+            // Start the attack cooldown
+            StartCoroutine(AttackCooldown());
+        }
+        else
+        {
+            Debug.LogWarning("EnemyAI does not implement the IAI interface or does not have a TakeDamage method");
+        }
+    }
+
+    IEnumerator AttackCooldown()
+    {
+        isOnCooldown = true;
+        yield return new WaitForSeconds(attackCooldown);
+        isOnCooldown = false;
     }
 
     bool IsTileBlocked(Vector3 position)
